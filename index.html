@@ -3950,6 +3950,9 @@ function route() {
   if (!Sync.isReady()) { $("#app").innerHTML = `<div class="empty" style="margin-top:3rem">⏳ Loading…</div>`; return; }
   const id = location.hash.replace(/^#\/?/, "").split("?")[0] || "home";
   const page = id === "feedback" ? Pages.login : Pages[id] || Pages.home;
+  const samePage = location.hash === route.last, keepY = window.scrollY;
+  route.last = location.hash;
+  if (samePage) $("#app").style.minHeight = $("#app").offsetHeight + "px";   // avoid a jump while re-drawing
   $("#app").innerHTML = page.render();
   page.mount && page.mount();
   $$("#navList a").forEach(a => a.classList.toggle("active", a.dataset.route === (id === "schedule" ? "learn" : id === "feedback" ? "login" : Pages[id] ? id : "home")));
@@ -3961,8 +3964,8 @@ function route() {
   if (sl) sl.textContent = u && u.role === "mentee" ? "🎒 My Classes" : "Student Sign Up";
   $("#nav").classList.remove("open");
   document.title = `${page.title} · ${CONFIG.name}`;
-  window.scrollTo(0, 0);
-  if (id === "feedback") fbScroll();
+  if (samePage) { window.scrollTo(0, keepY); requestAnimationFrame(() => { $("#app").style.minHeight = ""; }); }   // live data refresh: stay where the reader is
+  else { window.scrollTo(0, 0); if (id === "feedback") fbScroll(); }
 }
 function fbScroll() { const el = $("#feedback"); if (el) el.scrollIntoView({ block: "start" }); }
 
